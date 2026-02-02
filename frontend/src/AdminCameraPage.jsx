@@ -25,7 +25,25 @@ export default function AdminCameraPage() {
 
     // Track detected sites
     const detectedSitesRef = useRef(new Set());
-    const [taskStats, setTaskStats] = useState({ created: 0, pending: 0 });
+    const [taskStats, setTaskStats] = useState({ total: 0, pending: 0 });
+
+    // Fetch task statistics from database
+    const fetchTaskStats = async () => {
+        try {
+            const response = await fetch('https://smartwatemobile-1.onrender.com/api/task/detections/stats/summary');
+            const result = await response.json();
+
+            if (result.success && result.data.overall) {
+                const { total = 0, incomplete = 0 } = result.data.overall;
+                setTaskStats({
+                    total: total,
+                    pending: incomplete
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching task stats:', error);
+        }
+    };
 
     // Load ONNX model
     const loadModel = async () => {
@@ -454,10 +472,8 @@ export default function AdminCameraPage() {
 
             if (result.success || response.ok) {
                 console.log(`✅ Task created successfully`);
-                setTaskStats(prev => ({
-                    created: prev.created + 1,
-                    pending: prev.pending + 1
-                }));
+                // Refresh stats after creating a task
+                fetchTaskStats();
                 return result;
             }
         } catch (error) {
@@ -468,6 +484,10 @@ export default function AdminCameraPage() {
 
     useEffect(() => {
         loadModel();
+        fetchTaskStats(); // Fetch initial stats
+
+        // Set up interval to refresh stats every 30 seconds
+        const statsInterval = setInterval(fetchTaskStats, 30000);
 
         return () => {
             if (animationFrameRef.current) {
@@ -476,6 +496,7 @@ export default function AdminCameraPage() {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
+            clearInterval(statsInterval);
         };
     }, []);
 
@@ -511,8 +532,8 @@ export default function AdminCameraPage() {
                 <div className="bg-neutral-900 border border-gray-800 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-gray-400 text-sm">Tasks Created</p>
-                            <p className="text-2xl font-bold text-[#1E8449] mt-1">{taskStats.created}</p>
+                            <p className="text-gray-400 text-sm">Total Tasks</p>
+                            <p className="text-2xl font-bold text-[#1E8449] mt-1">{taskStats.total}</p>
                         </div>
                         <CheckCircle className="w-8 h-8 text-[#1E8449]" />
                     </div>
