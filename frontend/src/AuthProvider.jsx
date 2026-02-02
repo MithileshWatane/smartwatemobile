@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/clerk-react';
 import axios from 'axios';
 
 // API base URL - adjust this to match your environment
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://smartwatemobile-1.onrender.com';
 
 // Configure axios with default headers
 const api = axios.create({
