@@ -1,28 +1,21 @@
 import React, { useState } from "react";
-import Charts from "./charts";
-import ApproveReport from "./ApproveReport";
-import CreateListing from "./CreateListing";
-import History from "./History";
-import DisplayAllWorkers from "./displayAllWorkers";
-import AdminCameraPage from "./AdminCameraPage";
 import { BarChart2, FileText, ShoppingBag, Map, Menu, X, HardHat, Camera } from "lucide-react";
+import { Link, Outlet } from "react-router-dom";
 
-
-function Sidebar({ setActiveComponent }) {
+function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { icon: BarChart2, text: "Charts", component: "Charts" },
-    { icon: FileText, text: "Reports", component: "ApproveReport" },
-    { icon: ShoppingBag, text: "Marketplace", component: "Marketplace" },
-    { icon: Map, text: "Purchase History", component: "History" },
-    { icon: HardHat, text: "Workers", component: "DisplayAllWorkers" },
-    { icon: Camera, text: "Camera", component: "Camera" }
+    { icon: BarChart2, text: "Charts", path: "/admin-dashboard/charts" },
+    { icon: FileText, text: "Reports", path: "/admin-dashboard/reports" },
+    { icon: ShoppingBag, text: "Marketplace", path: "/admin-dashboard/marketplace" },
+    { icon: Map, text: "Purchase History", path: "/admin-dashboard/history" },
+    { icon: HardHat, text: "Workers", path: "/admin-dashboard/workers" },
+    { icon: Camera, text: "Camera", path: "/admin-dashboard/camera" }
   ];
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
-  const handleItemClick = (component) => {
-    setActiveComponent(component);
+  const handleItemClick = () => {
     setIsOpen(false);
   };
 
@@ -40,7 +33,7 @@ function Sidebar({ setActiveComponent }) {
       <div
         className={`fixed inset-y-0 left-0 bg-black border-r border-gray-700 shadow-lg p-4 transition-transform duration-300 
           ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 w-64 md:relative md:block`}
+          } md:translate-x-0 w-64 md:relative md:block h-screen`}
       >
         {/* Close Button */}
         {isOpen && (
@@ -56,13 +49,14 @@ function Sidebar({ setActiveComponent }) {
           <ul className="space-y-4 mt-8">
             {menuItems.map((item) => (
               <li key={item.text}>
-                <button
-                  onClick={() => handleItemClick(item.component)}
+                <Link
+                  to={item.path}
+                  onClick={handleItemClick}
                   className="flex items-center space-x-4 p-3 w-full text-left rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-300"
                 >
                   <item.icon className="w-6 h-6 text-gray-400 hover:text-white" />
                   <span className="text-lg">{item.text}</span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
@@ -73,19 +67,12 @@ function Sidebar({ setActiveComponent }) {
 }
 
 const AdminDashboard = () => {
-  const [activeComponent, setActiveComponent] = useState("Charts");
-
   return (
-    <div className="bg-black flex">
-      <Sidebar setActiveComponent={setActiveComponent} />
+    <div className="bg-black flex min-h-screen">
+      <Sidebar />
       <div className="flex-1 flex flex-col bg-black">
-        <main className="flex-1 bg-black text-white px-8">
-          {activeComponent === "Charts" && <Charts />}
-          {activeComponent === "ApproveReport" && <ApproveReport />}
-          {activeComponent === "Marketplace" && <CreateListing />}
-          {activeComponent === "History" && <History />}
-          {activeComponent === "DisplayAllWorkers" && <DisplayAllWorkers />}
-          {activeComponent === "Camera" && <AdminCameraPage />}
+        <main className="flex-1 bg-black text-white px-8 py-6">
+          <Outlet />
         </main>
       </div>
     </div>
