@@ -522,8 +522,7 @@ export default function CameraDetection({ isOpen, onClose }) {
             console.log('Creating task with Cloudinary upload...');
 
             // Send to backend as JSON
-            const apiUrl = import.meta.env.VITE_API_URL || '/api/';
-            const response = await fetch(`${apiUrl}task/detections`, {
+            const response = await fetch(`https://smartwatemobile-1.onrender.com/api/task/detections`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
