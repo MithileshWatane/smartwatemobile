@@ -28,7 +28,7 @@ const CreateListing = () => {
       ...formData,
       [name]: value
     });
-    
+
     // Remove the automatic calculation logic that was here
   };
 
@@ -37,7 +37,7 @@ const CreateListing = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/listings', formData, {
+      const response = await axios.post('https://smartwatemobile-1.onrender.com/api/listings', formData, {
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -83,7 +83,7 @@ const CreateListing = () => {
   return (
     <div className="bg-gray-800 text-white p-8  mb-8 rounded-lg max-w-4xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6 text-center">Create New Listing</h2>
-      
+
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="col-span-2">
@@ -185,19 +185,19 @@ const CreateListing = () => {
           </div>
 
           <div>
-  <label className="block mb-2">Total Amount</label>
-  <input
-    type="number"
-    name="amount"
-    value={formData.amount}
-    onChange={handleChange}
-    className="w-full bg-gray-700 p-3 rounded text-white"
-    placeholder="Enter total amount"
-    required
-    min="0"
-    step="0.01"
-  />
-</div>
+            <label className="block mb-2">Total Amount</label>
+            <input
+              type="number"
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              className="w-full bg-gray-700 p-3 rounded text-white"
+              placeholder="Enter total amount"
+              required
+              min="0"
+              step="0.01"
+            />
+          </div>
         </div>
 
         <div className="mt-8 text-center">

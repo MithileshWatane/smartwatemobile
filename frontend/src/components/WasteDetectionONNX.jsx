@@ -10,7 +10,7 @@ function WasteDetectionExactSchema() {
   const [modelInfo, setModelInfo] = useState(null);
   const [detectedSites, setDetectedSites] = useState(new Set());
   const [dbStats, setDbStats] = useState({ total: 0, recent: 0, pending: 0 });
-  const [apiEndpoint] = useState('http://localhost:5000/api/task'); // Change to your API URL
+  const [apiEndpoint] = useState('https://smartwatemobile-1.onrender.com/api/task'); // Change to your API URL
   const [tasks, setTasks] = useState([]);
   const detectionLoopRef = useRef(null);
 
@@ -24,34 +24,34 @@ function WasteDetectionExactSchema() {
     const loadModel = async () => {
       try {
         addLog('Checking ONNX Runtime availability...');
-        
+
         if (typeof ort === 'undefined') {
           throw new Error("ONNX Runtime not loaded. Add script tag to HTML.");
         }
 
         addLog('Configuring ONNX Runtime...');
         ort.env.wasm.wasmPaths = "https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.16.3/";
-        
+
         addLog('Loading model from /waste_detection.onnx...');
-        
+
         const model = await ort.InferenceSession.create("/waste_detection.onnx", {
           executionProviders: ["wasm"],
           graphOptimizationLevel: "all",
         });
-        
+
         const inputs = model.inputNames;
         const outputs = model.outputNames;
-        
+
         addLog(`Model loaded successfully!`);
         setModelInfo({ inputs, outputs });
         setSession(model);
-        
+
       } catch (err) {
         addLog(`Model loading failed: ${err.message}`);
         setError(`Failed to load model: ${err.message}. Please ensure waste_detection.onnx is available.`);
       }
     };
-    
+
     loadModel();
   }, []);
 
@@ -60,7 +60,7 @@ function WasteDetectionExactSchema() {
     const detectionArea = width * height;
     const frameArea = frameHeight * frameWidth;
     const coveragePercentage = (detectionArea / frameArea) * 100;
-    
+
     if (coveragePercentage >= 20) return "High";
     if (coveragePercentage >= 10) return "Medium";
     return "Low";
@@ -70,13 +70,13 @@ function WasteDetectionExactSchema() {
   const calculatePriority = (className, severity) => {
     const classPriority = {
       "spills": "High",
-      "garbage": "Medium", 
+      "garbage": "Medium",
       "bin": "Low"
     };
-    
+
     const basePriority = classPriority[className.toLowerCase()] || "Low";
     const priorityLevels = { "High": 3, "Medium": 2, "Low": 1 };
-    
+
     return priorityLevels[severity] > priorityLevels[basePriority] ? severity : basePriority;
   };
 
@@ -108,9 +108,9 @@ function WasteDetectionExactSchema() {
   const storeDetection = async (detectionPayload) => {
     try {
       addLog('📤 Sending detection to API...');
-      
+
       const formData = new FormData();
-      
+
       // Add all fields matching the API endpoint
       Object.keys(detectionPayload).forEach(key => {
         if (key === 'imageBlob') {
@@ -128,7 +128,7 @@ function WasteDetectionExactSchema() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         addLog(`✅ Detection stored with ID: ${result.id}`);
         setDbStats(prev => ({
@@ -136,7 +136,7 @@ function WasteDetectionExactSchema() {
           recent: prev.recent + 1,
           pending: prev.pending + 1
         }));
-        
+
         // Add to local tasks list
         const newTask = {
           id: result.id,
@@ -147,12 +147,12 @@ function WasteDetectionExactSchema() {
           timestamp: new Date().toISOString()
         };
         setTasks(prev => [newTask, ...prev.slice(0, 9)]);
-        
+
         return result;
       } else {
         throw new Error(result.error || 'API request failed');
       }
-      
+
     } catch (error) {
       addLog(`❌ Database storage failed: ${error.message}`);
       throw error;
@@ -164,54 +164,54 @@ function WasteDetectionExactSchema() {
     const centerX = (x1 + x2) / 2;
     const centerY = (y1 + y2) / 2;
     const key = `${Math.floor(centerX / 50)}_${Math.floor(centerY / 50)}`;
-    
+
     // Avoid duplicate detections in same area (same as Python)
     if (detectedSites.has(key)) {
       return;
     }
-    
+
     setDetectedSites(prev => new Set([...prev, key]));
     addLog(`⚠️ Problem detected at approx. location (x=${centerX.toFixed(0)}, y=${centerY.toFixed(0)})`);
 
     // Capture image as blob for upload
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
     const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-    
+
     // Generate filename matching Python format
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '-').substring(0, 19);
     const filename = `problem_detected_${timestamp}.jpg`;
-    
+
     addLog(`📸 Screenshot captured: ${filename}`);
 
     // Get frame dimensions
     const frameHeight = canvas.height;
     const frameWidth = canvas.width;
-    
+
     // Calculate all values using exact Python logic
     const width = x2 - x1;
     const height = y2 - y1;
     const detectionSize = width * height;
     const coveragePercentage = (detectionSize / (frameHeight * frameWidth)) * 100;
-    
+
     const severity = calculateSeverity(width, height, frameHeight, frameWidth);
     const priority = calculatePriority(className, severity);
-    
+
     // Department assignment exactly matching Python
     const department = className.toLowerCase() !== "spills" ? "cleaning" : "spill";
-    
+
     // Location string exactly matching Python format
     const cameraId = 'CAM1';
     const location = `${cameraId}-${Math.round(centerX)}-${Math.round(centerY)}`;
-    
+
     // Get GPS coordinates
     const gpsCoords = await getGPSCoordinates();
-    
+
     // Create detection payload matching exact Python structure
     const detectionPayload = {
       // API endpoint parameters
       detectedClass: className,
       x1: x1.toString(),
-      y1: y1.toString(), 
+      y1: y1.toString(),
       x2: x2.toString(),
       y2: y2.toString(),
       confidenceScore: score.toString(),
@@ -223,7 +223,7 @@ function WasteDetectionExactSchema() {
       imageData: imageData,
       imagePath: filename,
       imageBlob: imageBlob,
-      
+
       // These will be calculated by the backend to match Python exactly:
       size: detectionSize,
       department: department,
@@ -243,7 +243,7 @@ function WasteDetectionExactSchema() {
         coveragePercentage: coveragePercentage
       }
     };
-    
+
     // Store in database
     await storeDetection(detectionPayload);
   };
@@ -254,7 +254,7 @@ function WasteDetectionExactSchema() {
       try {
         const response = await fetch(`${apiEndpoint}/detections/stats/summary`);
         const result = await response.json();
-        
+
         if (result.success) {
           setDbStats({
             total: result.data.overall.total || 0,
@@ -267,7 +267,7 @@ function WasteDetectionExactSchema() {
         addLog('ℹ️ Could not load existing stats from database');
       }
     };
-    
+
     loadStats();
   }, [apiEndpoint]);
 
@@ -276,15 +276,15 @@ function WasteDetectionExactSchema() {
     try {
       setError(null);
       addLog('Requesting camera access...');
-      
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 640 }, 
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
           height: { ideal: 640 },
           facingMode: 'environment'
-        } 
+        }
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
@@ -322,18 +322,18 @@ function WasteDetectionExactSchema() {
   const startDetectionLoop = () => {
     let frameCount = 0;
     let shouldContinue = true;
-    
+
     const detect = async () => {
       frameCount++;
-      
+
       if (frameCount % 60 === 0) {
         addLog(`Detection loop running - frame ${frameCount}`);
       }
-      
+
       const hasSession = !!session;
       const hasVideo = !!videoRef.current;
       const videoHasStream = !!(videoRef.current?.srcObject);
-      
+
       if (!shouldContinue || !hasSession || !hasVideo || !videoHasStream) {
         addLog(`Detection stopped - Continue: ${shouldContinue}, Session: ${hasSession}, Video: ${hasVideo}, Stream: ${videoHasStream}`);
         return;
@@ -341,14 +341,14 @@ function WasteDetectionExactSchema() {
 
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext("2d");
-      
+
       if (!canvas || !ctx) {
         addLog('Detection stopped - no canvas');
         return;
       }
 
       const readyState = videoRef.current.readyState;
-      
+
       if (readyState >= 2) {
         try {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -372,7 +372,7 @@ function WasteDetectionExactSchema() {
         addLog('Detection loop stopped by request');
       }
     };
-    
+
     detect();
   };
 
@@ -396,18 +396,18 @@ function WasteDetectionExactSchema() {
   const preprocessImageForYOLO = (imgData) => {
     const { data } = imgData;
     const input = new Float32Array(3 * 640 * 640);
-    
+
     for (let y = 0; y < 640; y++) {
       for (let x = 0; x < 640; x++) {
         const pixelIndex = (y * 640 + x) * 4;
         const outputIndex = y * 640 + x;
-        
+
         input[outputIndex] = data[pixelIndex] / 255.0;
         input[outputIndex + 640 * 640] = data[pixelIndex + 1] / 255.0;
         input[outputIndex + 640 * 640 * 2] = data[pixelIndex + 2] / 255.0;
       }
     }
-    
+
     return input;
   };
 
@@ -415,17 +415,17 @@ function WasteDetectionExactSchema() {
   const processYOLOOutput = async (ctx, canvas, results) => {
     const outputName = session.outputNames[0];
     const output = results[outputName];
-    
+
     if (!output) return;
-    
+
     const shape = output.dims;
     const data = output.data;
-    
+
     const classNames = ["bin", "garbage", "spills"];
     const colors = ["#00ff00", "#ff9900", "#ff0000"];
-    
+
     let detections = [];
-    
+
     // Process different output formats
     if (shape.length === 3) {
       const [batch, values, numDetections] = shape;
@@ -435,46 +435,46 @@ function WasteDetectionExactSchema() {
         detections = processYOLOFormat(data, numDetections, values);
       }
     }
-    
+
     // Filter valid detections
     const confidenceThreshold = 0.5;
-    const validDetections = detections.filter(det => 
-      det.confidence > confidenceThreshold && 
-      det.classId >= 0 && 
+    const validDetections = detections.filter(det =>
+      det.confidence > confidenceThreshold &&
+      det.classId >= 0 &&
       det.classId < classNames.length
     );
-    
+
     if (validDetections.length > 0) {
       addLog(`Found ${validDetections.length} detections above ${confidenceThreshold} confidence`);
-      
+
       for (const det of validDetections) {
         const { x, y, w, h, confidence, classId } = det;
-        
-        const x1 = Math.max(0, (x - w/2) * 640);
-        const y1 = Math.max(0, (y - h/2) * 640);
+
+        const x1 = Math.max(0, (x - w / 2) * 640);
+        const y1 = Math.max(0, (y - h / 2) * 640);
         const width = Math.min(640 - x1, w * 640);
         const height = Math.min(640 - y1, h * 640);
-        
+
         if (width <= 0 || height <= 0) continue;
-        
+
         // Draw bounding box
         ctx.lineWidth = 4;
         ctx.strokeStyle = colors[classId];
         ctx.fillStyle = colors[classId];
         ctx.strokeRect(x1, y1, width, height);
-        
+
         const label = `${classNames[classId]}: ${(confidence * 100).toFixed(1)}%`;
         const textMetrics = ctx.measureText(label);
         const textWidth = textMetrics.width;
         const textHeight = 20;
-        
+
         ctx.fillStyle = colors[classId] + '90';
         ctx.fillRect(x1, y1 - textHeight - 2, textWidth + 8, textHeight + 4);
-        
+
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 16px Arial';
         ctx.fillText(label, x1 + 4, y1 - 6);
-        
+
         // Log detection to database
         if (confidence >= 0.0) {
           await logDetection(classNames[classId], x1, y1, x1 + width, y1 + height, canvas, confidence);
@@ -491,7 +491,7 @@ function WasteDetectionExactSchema() {
       const y = data[1 * numDetections + i];
       const w = data[2 * numDetections + i];
       const h = data[3 * numDetections + i];
-      
+
       let maxClassConf = 0;
       let bestClass = 0;
       for (let j = 4; j < numValues && j < 7; j++) {
@@ -501,7 +501,7 @@ function WasteDetectionExactSchema() {
           bestClass = j - 4;
         }
       }
-      
+
       detections.push({
         x: x / 640, y: y / 640, w: w / 640, h: h / 640,
         confidence: maxClassConf, classId: bestClass
@@ -516,7 +516,7 @@ function WasteDetectionExactSchema() {
       const base = i * values;
       const x = data[base], y = data[base + 1], w = data[base + 2], h = data[base + 3];
       const objConf = data[base + 4];
-      
+
       let maxClassConf = 0, bestClass = 0;
       const maxClasses = Math.min(3, values - 5);
       for (let j = 0; j < maxClasses; j++) {
@@ -526,7 +526,7 @@ function WasteDetectionExactSchema() {
           bestClass = j;
         }
       }
-      
+
       detections.push({
         x, y, w, h, confidence: objConf * maxClassConf, classId: bestClass
       });
@@ -547,7 +547,7 @@ function WasteDetectionExactSchema() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Smart Waste Detection with Task Database</h1>
-      
+
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
           <strong>Error:</strong> {error}
@@ -556,7 +556,7 @@ function WasteDetectionExactSchema() {
 
       <div className="mb-6 flex gap-4 flex-wrap">
         {!isStreaming ? (
-          <button 
+          <button
             onClick={startCamera}
             disabled={!session}
             className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg"
@@ -564,15 +564,15 @@ function WasteDetectionExactSchema() {
             {session ? "Start Detection" : "Loading Model..."}
           </button>
         ) : (
-          <button 
+          <button
             onClick={stopCamera}
             className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg"
           >
             Stop Detection
           </button>
         )}
-        
-        <button 
+
+        <button
           onClick={() => {
             setDebugLog([]);
             setDetectedSites(new Set());
@@ -589,20 +589,20 @@ function WasteDetectionExactSchema() {
         {/* Camera Display */}
         <div className="lg:col-span-2 space-y-4">
           <div className="relative bg-black rounded-lg overflow-hidden">
-            <video 
-              ref={videoRef} 
+            <video
+              ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover opacity-40"
               muted
               playsInline
             />
-            <canvas 
-              ref={canvasRef} 
-              width="640" 
+            <canvas
+              ref={canvasRef}
+              width="640"
               height="640"
               className="relative z-10 w-full h-full"
             />
           </div>
-          
+
           {/* Database Statistics */}
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 bg-blue-50 rounded-lg text-center">
@@ -663,11 +663,11 @@ function WasteDetectionExactSchema() {
             </div>
           </div>
 
-          
-         </div>
-      </div>   
-   </div>
-    );
+
+        </div>
+      </div>
+    </div>
+  );
 }
 
 

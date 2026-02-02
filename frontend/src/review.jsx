@@ -17,17 +17,17 @@ const ReviewDashboard = () => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch all reviews
         const reviewsResponse = await axios.get(
-          "http://localhost:5000/api/reviews"
+          "https://smartwatemobile-1.onrender.com/api/reviews"
         );
-        
+
         setReviews(reviewsResponse.data);
-        
+
         // Process sentiment analysis on frontend
         await processReviewSentiment(reviewsResponse.data);
-        
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -36,51 +36,51 @@ const ReviewDashboard = () => {
         toast.error("Failed to load review data");
       }
     };
-    
+
     fetchReviews();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!isLoaded || !isSignedIn) {
       toast.error("Please sign in to submit a review");
       return;
     }
-    
+
     if (review.trim() === '') {
       toast.error("Please enter a review");
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
+
       const response = await axios.post(
-        "http://localhost:5000/api/reviews/add",
+        "https://smartwatemobile-1.onrender.com/api/reviews/add",
         {
           clerkId: user.id,
           reviewText: review,
           rating: rating,
         }
       );
-      
+
       toast.success("Review submitted successfully!");
-      
+
       // Analyze the new review immediately
       const newReview = response.data;
       const sentiment = await analyzeSentiment(newReview.reviewText);
-      
+
       if (sentiment) {
         newReview.sentiment = sentiment.score;
         newReview.sentimentLabel = sentiment.label;
       }
-      
+
       // Add the new review to the state and recalculate sentiment data
       const updatedReviews = [newReview, ...reviews];
       setReviews(updatedReviews);
       await processReviewSentiment(updatedReviews);
-      
+
       // Reset form
       setReview('');
       setRating(5);
@@ -101,7 +101,7 @@ const ReviewDashboard = () => {
           if (review.sentiment && review.sentimentLabel) {
             return review;
           }
-          
+
           const sentiment = await analyzeSentiment(review.reviewText);
           return {
             ...review,
@@ -113,7 +113,7 @@ const ReviewDashboard = () => {
 
       // Update reviews with sentiment data
       setReviews(reviewsWithSentiment);
-      
+
       // Calculate sentiment summary
       const sentimentSummary = calculateSentimentSummary(reviewsWithSentiment);
       setSentimentData(sentimentSummary);
@@ -127,7 +127,7 @@ const ReviewDashboard = () => {
     const initials = 'AKLMNPRSTJ';
     return initials[Math.floor(Math.random() * initials.length)];
   };
-  
+
   const analyzeSentiment = async (text) => {
     try {
       const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
@@ -180,7 +180,7 @@ const ReviewDashboard = () => {
   };
 
   const calculateSentimentSummary = (reviewsWithSentiment) => {
-    const filteredReviews = reviewsWithSentiment.filter(review => 
+    const filteredReviews = reviewsWithSentiment.filter(review =>
       review.sentimentLabel !== null && review.sentiment !== null
     );
 
@@ -276,19 +276,19 @@ const ReviewDashboard = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
   const renderSentimentBadge = (sentiment, sentimentLabel) => {
     if (!sentiment && !sentimentLabel) return null;
-    
+
     let badgeClass;
     let label;
-    
+
     if (sentimentLabel === 'positive' || sentiment > 0.33) {
       badgeClass = 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300';
       label = 'Positive';
@@ -299,7 +299,7 @@ const ReviewDashboard = () => {
       badgeClass = 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
       label = 'Neutral';
     }
-    
+
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${badgeClass}`}>
         {label}
@@ -351,7 +351,7 @@ const ReviewDashboard = () => {
                   <p className="text-neutral-600 dark:text-gray-300 mb-4">
                     Please sign in to submit a review
                   </p>
-                  <button 
+                  <button
                     className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition duration-300"
                     onClick={() => window.location.href = "/sign-in"}
                   >
@@ -361,8 +361,8 @@ const ReviewDashboard = () => {
               ) : (
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4 ">
-                    <label 
-                      htmlFor="rating" 
+                    <label
+                      htmlFor="rating"
                       className="block text-gray-700 dark:text-gray-300 mb-2 font-medium"
                     >
                       Rating
@@ -375,8 +375,8 @@ const ReviewDashboard = () => {
                           onClick={() => setRating(star)}
                           className="focus:outline-none"
                         >
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
                             className={`h-8 w-8 ${star <= rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`}
                             viewBox="0 0 20 20"
                             fill="currentColor"
@@ -387,15 +387,15 @@ const ReviewDashboard = () => {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="mb-4">
-                    <label 
-                      htmlFor="review" 
+                    <label
+                      htmlFor="review"
                       className="block text-neutral-700 dark:text-neutral-300 mb-2 font-medium"
                     >
                       Your Review
                     </label>
-                    <textarea 
+                    <textarea
                       id="review"
                       rows="4"
                       className="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -405,8 +405,8 @@ const ReviewDashboard = () => {
                       required
                     ></textarea>
                   </div>
-                  
-                  <button 
+
+                  <button
                     type="submit"
                     disabled={isSubmitting}
                     className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition duration-300 flex justify-center"
@@ -452,7 +452,7 @@ const ReviewDashboard = () => {
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
               Sentiment Analysis Insights
             </h2>
-            
+
             {loading ? (
               <div className="flex justify-center items-center py-10">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600"></div>
@@ -467,27 +467,27 @@ const ReviewDashboard = () => {
                 {sentimentData && (
                   <div className="mb-6">
                     <h4 className="font-medium text-gray-800 dark:text-white mb-3">Sentiment Distribution</h4>
-                    
+
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-2">
-                      <div 
+                      <div
                         className="flex rounded-full h-4"
                         style={{ width: '100%' }}
                       >
-                        <div 
-                          className="bg-green-500 rounded-l-full" 
+                        <div
+                          className="bg-green-500 rounded-l-full"
                           style={{ width: `${sentimentData.positivePercentage}%` }}
                         ></div>
-                        <div 
-                          className="bg-gray-400" 
+                        <div
+                          className="bg-gray-400"
                           style={{ width: `${sentimentData.neutralPercentage}%` }}
                         ></div>
-                        <div 
-                          className="bg-red-500 rounded-r-full" 
+                        <div
+                          className="bg-red-500 rounded-r-full"
                           style={{ width: `${sentimentData.negativePercentage}%` }}
                         ></div>
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
                       <span>Positive ({sentimentData.positivePercentage}%)</span>
                       <span>Neutral ({sentimentData.neutralPercentage}%)</span>
@@ -495,11 +495,11 @@ const ReviewDashboard = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {/* How Sentiment Analysis Works */}
                 <div>
                   <h4 className="font-medium text-gray-800 dark:text-white mb-3">How Sentiment Analysis Works</h4>
-                  
+
                   {/* AI Analysis */}
                   <div className="flex items-start space-x-4 mb-4">
                     <div className="bg-amber-600 p-3 rounded-lg">
@@ -531,7 +531,7 @@ const ReviewDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Keyword Extraction */}
                   <div className="flex items-start space-x-4 mb-4">
                     <div className="bg-amber-600 p-3 rounded-lg">
@@ -557,7 +557,7 @@ const ReviewDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Trend Tracking */}
                   <div className="flex items-start space-x-4">
                     <div className="bg-amber-600 p-3 rounded-lg">
@@ -584,15 +584,15 @@ const ReviewDashboard = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Top Keywords */}
                 {sentimentData && sentimentData.topKeywords && (
                   <div className="mt-6">
                     <h4 className="font-medium text-gray-800 dark:text-white mb-3">Top Keywords</h4>
                     <div className="flex flex-wrap gap-2">
                       {sentimentData.topKeywords.map((keyword, index) => (
-                        <span 
-                          key={index} 
+                        <span
+                          key={index}
                           className="px-2 py-1 bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-300 rounded-full text-xs"
                         >
                           {keyword}
@@ -606,15 +606,15 @@ const ReviewDashboard = () => {
           </div>
         </div>
       </div>
-      
 
-{/* Reviews List - Results Section */}
-<div className="mt-8">
+
+      {/* Reviews List - Results Section */}
+      <div className="mt-8">
         <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-md p-6">
           <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">
             Recent Reviews
           </h3>
-          
+
           {loading ? (
             <div className="flex justify-center items-center py-10">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600"></div>
@@ -625,68 +625,68 @@ const ReviewDashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-         {reviews.length === 0 ? (
-  <div className="col-span-2 text-center py-6 text-gray-500 dark:text-gray-400">
-    No reviews available yet. Be the first to share your experience!
-  </div>
-) : (
-  // Sort reviews by date (newest first) and take only the first 5
-  [...reviews]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 5)
-    .map((review) => (
-      <div 
-        key={review._id} 
-        className="bg-gray-50 dark:bg-neutral-700 p-4 rounded-lg"
-      >
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex items-center">
-          <div className="bg-amber-100 dark:bg-amber-900 h-10 w-10 rounded-full flex items-center justify-center text-amber-800 dark:text-amber-300 font-semibold">
-  {getRandomLetter()}
-</div>
 
-            <div className="ml-3">
-            <p className="text-gray-700 dark:text-gray-300">
-          {review.reviewText}
-        </p>
-            </div>
-          </div>
-          {renderSentimentBadge(review.sentiment, review.sentimentLabel)}
-        </div>
-    
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                <span>{formatDate(review.createdAt)}</span>
-                <span className="mx-2">•</span>
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <svg 
-                      key={i}
-                      xmlns="http://www.w3.org/2000/svg" 
-                      className={`h-4 w-4 ${i < review.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`}
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
+              {reviews.length === 0 ? (
+                <div className="col-span-2 text-center py-6 text-gray-500 dark:text-gray-400">
+                  No reviews available yet. Be the first to share your experience!
                 </div>
-              </div>
-      </div>
-    ))
-)}
+              ) : (
+                // Sort reviews by date (newest first) and take only the first 5
+                [...reviews]
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .slice(0, 5)
+                  .map((review) => (
+                    <div
+                      key={review._id}
+                      className="bg-gray-50 dark:bg-neutral-700 p-4 rounded-lg"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center">
+                          <div className="bg-amber-100 dark:bg-amber-900 h-10 w-10 rounded-full flex items-center justify-center text-amber-800 dark:text-amber-300 font-semibold">
+                            {getRandomLetter()}
+                          </div>
+
+                          <div className="ml-3">
+                            <p className="text-gray-700 dark:text-gray-300">
+                              {review.reviewText}
+                            </p>
+                          </div>
+                        </div>
+                        {renderSentimentBadge(review.sentiment, review.sentimentLabel)}
+                      </div>
+
+                      <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                        <span>{formatDate(review.createdAt)}</span>
+                        <span className="mx-2">•</span>
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <svg
+                              key={i}
+                              xmlns="http://www.w3.org/2000/svg"
+                              className={`h-4 w-4 ${i < review.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`}
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              )}
             </div>
-        )}
+          )}
+        </div>
       </div>
+
+
+
+
+
+
+
     </div>
-
-
-
-
-
-
-
-  </div>
   )
 };
 

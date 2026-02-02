@@ -10,7 +10,7 @@ const History = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedUser, setExpandedUser] = useState(null);
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = 'https://smartwatemobile-1.onrender.com/api';
 
   useEffect(() => {
     fetchData();
@@ -19,20 +19,20 @@ const History = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-  
+
       // Fetch all users and listings concurrently
       const [usersResponse, listingsResponse] = await Promise.all([
         axios.get(`${API_URL}/allusers`),  // Your existing API for users
         axios.get(`${API_URL}/listings`)   // Your existing API for listings
       ]);
-  
+
       let usersData = usersResponse.data;
-  
+
       // Fetch user details from Clerk for each user
       const userDetailsPromises = usersData.map(async (user) => {
         try {
           const clerkResponse = await axios.get(
-            `http://localhost:5000/api/users/${user.clerkId}`, 
+            `https://smartwatemobile-1.onrender.com/api/users/${user.clerkId}`,
             {
               headers: {
                 Authorization: `Bearer ${import.meta.env.CLERK_SECRET_KEY}`,
@@ -49,9 +49,9 @@ const History = () => {
           return { ...user, displayName: "Unknown", email: "No email" };
         }
       });
-  
+
       usersData = await Promise.all(userDetailsPromises);
-  
+
       setUsers(usersData);
       setListings(listingsResponse.data);
       setLoading(false);
@@ -98,12 +98,12 @@ const History = () => {
   return (
     <div className="text-white p-8  rounded-lg max-w-6xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6">All Users and Their Purchases</h2>
-      
+
       <div className="space-y-4">
         {users.map(user => (
           <div key={user._id} className="bg-gray-700 rounded-lg overflow-hidden">
             {/* User Header */}
-            <div 
+            <div
               className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-600"
               onClick={() => toggleUserExpansion(user._id)}
             >
@@ -116,7 +116,7 @@ const History = () => {
                   <div className="text-sm text-gray-300">{user.email}</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4">
                 <div className="bg-teal-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                   {user.purchasedItems?.length || 0} Purchases
@@ -124,7 +124,7 @@ const History = () => {
                 <div className="text-xl">{expandedUser === user._id ? '▼' : '▶'}</div>
               </div>
             </div>
-            
+
             {/* User Purchases */}
             {expandedUser === user._id && user.purchasedItems?.length > 0 && (
               <div className="p-4 border-t border-gray-600">
@@ -145,7 +145,7 @@ const History = () => {
                       {user.purchasedItems.map(itemId => {
                         const listing = getListingDetails(itemId);
                         if (!listing) return null;
-                        
+
                         return (
                           <tr key={itemId} className="hover:bg-gray-600">
                             <td className="p-2">
@@ -165,7 +165,7 @@ const History = () => {
                 </div>
               </div>
             )}
-            
+
             {/* No Purchases Message */}
             {expandedUser === user._id && (!user.purchasedItems || user.purchasedItems.length === 0) && (
               <div className="p-4 border-t border-gray-600 text-center text-gray-400">
@@ -175,7 +175,7 @@ const History = () => {
           </div>
         ))}
       </div>
-      
+
       {users.length === 0 && (
         <div className="text-center p-8 text-gray-400">
           No users found.

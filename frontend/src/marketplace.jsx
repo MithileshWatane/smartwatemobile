@@ -38,7 +38,7 @@ export default function Marketplace() {
 
         // Fetch user data from your backend API using the Clerk ID
         const response = await axios.get(
-          `http://localhost:5000/api/user/profile/${clerkId}`
+          `https://smartwatemobile-1.onrender.com/api/user/profile/${clerkId}`
         );
 
         setUserProfile(response.data);
@@ -64,7 +64,7 @@ export default function Marketplace() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/payment/order`,
+        `https://smartwatemobile-1.onrender.com/api/payment/order`,
         {
           method: "POST",
           headers: {
@@ -95,7 +95,7 @@ export default function Marketplace() {
         // console.log("response", response)
         try {
           const res = await fetch(
-            `http://localhost:5000/api/payment/verify`,
+            `https://smartwatemobile-1.onrender.com/api/payment/verify`,
             {
               method: "POST",
               headers: {
@@ -142,7 +142,7 @@ export default function Marketplace() {
       }
 
       const response = await axios.get(
-        "http://localhost:5000/api/listings",
+        "https://smartwatemobile-1.onrender.com/api/listings",
         { params }
       );
 
@@ -409,7 +409,7 @@ export default function Marketplace() {
       }
 
       const response = await axios.get(
-        "http://localhost:5000/api/listings/purchased",
+        "https://smartwatemobile-1.onrender.com/api/listings/purchased",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -468,7 +468,7 @@ export default function Marketplace() {
 
       // Send request to purchase the item and deduct coins
       const response = await axios.post(
-        "http://localhost:5000/api/listings/purchase",
+        "https://smartwatemobile-1.onrender.com/api/listings/purchase",
         {
           listingId,
           price: coinsUsed,
@@ -483,7 +483,7 @@ export default function Marketplace() {
       try {
         const token = await getToken();
         const response = await axios.patch(
-          `http://localhost:5000/api/listings/${listingId}`,
+          `https://smartwatemobile-1.onrender.com/api/listings/${listingId}`,
           { price: parseInt(coinsUsed) || 0 },
           {
             headers: {
@@ -508,7 +508,7 @@ export default function Marketplace() {
 
       toast.error(
         error.response?.data?.message ||
-          "Failed to purchase item. Please try again."
+        "Failed to purchase item. Please try again."
       );
     }
   };
@@ -728,8 +728,7 @@ export default function Marketplace() {
                                   {finalPrices[listing._id] || listing.amount}
                                   {discountCoins[listing._id] &&
                                     discountCoins[listing._id] > 0 &&
-                                    ` (${
-                                      discountCoins[listing._id]
+                                    ` (${discountCoins[listing._id]
                                     } GreenCoins applied)`}
                                 </span>
                               </div>
@@ -755,11 +754,10 @@ export default function Marketplace() {
                           <div className="mt-4 md:mt-0">
                             {/* Updated purchase button */}
                             <button
-                              className={`px-4 py-2 ${
-                                purchasedItems.includes(listing._id)
+                              className={`px-4 py-2 ${purchasedItems.includes(listing._id)
                                   ? "bg-green-600 hover:bg-green-700"
                                   : "bg-amber-600 hover:bg-amber-700"
-                              } text-white rounded-md text-sm font-medium transition duration-300`}
+                                } text-white rounded-md text-sm font-medium transition duration-300`}
                               onClick={() => {
                                 if (!purchasedItems.includes(listing._id)) {
                                   // Only call handlePayment first, which will call handlePurchase after successful payment
@@ -773,9 +771,8 @@ export default function Marketplace() {
                             >
                               {purchasedItems.includes(listing._id)
                                 ? "Purchased"
-                                : `Buy for Rs. ${
-                                    finalPrices[listing._id] || listing.amount
-                                  }`}
+                                : `Buy for Rs. ${finalPrices[listing._id] || listing.amount
+                                }`}
                             </button>
                           </div>
                         </div>
@@ -899,7 +896,7 @@ export default function Marketplace() {
                     </div>
                   </div>
                 </div>
-        
+
               </div>
             </div>
           </div>

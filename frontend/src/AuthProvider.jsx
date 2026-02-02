@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/clerk-react';
 import axios from 'axios';
 
 // API base URL - adjust this to match your environment
-const API_BASE_URL ='http://localhost:5000';
+const API_BASE_URL = 'https://smartwatemobile-1.onrender.com';
 
 // Configure axios with default headers
 const api = axios.create({
@@ -19,14 +19,14 @@ export const AuthProvider = ({ children }) => {
     // Function to sync user with backend
     const syncUser = async () => {
       if (!isSignedIn) return;
-      
+
       try {
         // Get Clerk token
         const token = await getToken();
-        
+
         // Set auth header for all future requests
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
+
         try {
           // Try fetching current user (will succeed if user exists)
           await api.get('/api/users/me');
@@ -57,17 +57,17 @@ export const userService = {
     const response = await api.get('/api/users/me');
     return response.data;
   },
-  
+
   updateProfile: async (profileData) => {
     const response = await api.put('/api/users/profile', profileData);
     return response.data;
   },
-  
+
   getGreenCoins: async () => {
     const response = await api.get('/api/users/me');
     return response.data.greenCoins;
   },
-  
+
   addGreenCoins: async (amount) => {
     const response = await api.post('/api/users/green-coins', { amount });
     return response.data;
@@ -79,27 +79,27 @@ export const listingService = {
     const response = await api.get('/api/listings', { params: filters });
     return response.data;
   },
-  
+
   getListingById: async (id) => {
     const response = await api.get(`/api/listings/${id}`);
     return response.data;
   },
-  
+
   createListing: async (listingData) => {
     const response = await api.post('/api/listings', listingData);
     return response.data;
   },
-  
+
   updateListing: async (id, listingData) => {
     const response = await api.put(`/api/listings/${id}`, listingData);
     return response.data;
   },
-  
+
   deleteListing: async (id) => {
     const response = await api.delete(`/api/listings/${id}`);
     return response.data;
   },
-  
+
   getUserListings: async () => {
     const response = await api.get('/api/listings/user/me');
     return response.data;
@@ -113,12 +113,12 @@ export const listingService = {
       throw error;
     }
   },
-  
+
   purchaseListing: async (listingId, price) => {
     try {
-      const response = await api.post('/api/listings/purchase', { 
-        listingId, 
-        price 
+      const response = await api.post('/api/listings/purchase', {
+        listingId,
+        price
       });
       return response.data;
     } catch (error) {
@@ -126,11 +126,11 @@ export const listingService = {
       throw error;
     }
   },
-  
+
   updateListingPrice: async (listingId, price) => {
     try {
-      const response = await api.patch(`/api/listings/${listingId}`, { 
-        price: parseInt(price) || 0 
+      const response = await api.patch(`/api/listings/${listingId}`, {
+        price: parseInt(price) || 0
       });
       return response.data;
     } catch (error) {
@@ -145,27 +145,27 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If error is 401 and we haven't tried to refresh the token yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         // Get a fresh token from Clerk
         const { getToken } = useAuth();
         const token = await getToken();
-        
+
         // Update the authorization header
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         originalRequest.headers['Authorization'] = `Bearer ${token}`;
-        
+
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
