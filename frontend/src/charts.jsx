@@ -154,7 +154,7 @@ const Charts = () => {
                             ),
                             backgroundColor: colorPalette.accent[1],
                         },
-                        {
+                        { 
                             label: "Large",
                             data: wasteTypes.map(type => 
                                 data.filter(report => report.waste_type === type && report.estimated_quantity === "large").length
