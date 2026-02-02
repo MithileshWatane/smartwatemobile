@@ -4,7 +4,8 @@ import ApproveReport from "./ApproveReport";
 import CreateListing from "./CreateListing";
 import History from "./History";
 import DisplayAllWorkers from "./displayAllWorkers";
-import { BarChart2, FileText, ShoppingBag, Map, Menu, X, HardHat } from "lucide-react";
+import AdminCameraPage from "./AdminCameraPage";
+import { BarChart2, FileText, ShoppingBag, Map, Menu, X, HardHat, Camera } from "lucide-react";
 
 
 function Sidebar({ setActiveComponent }) {
@@ -15,7 +16,8 @@ function Sidebar({ setActiveComponent }) {
     { icon: FileText, text: "Reports", component: "ApproveReport" },
     { icon: ShoppingBag, text: "Marketplace", component: "Marketplace" },
     { icon: Map, text: "Purchase History", component: "History" },
-    {icon: HardHat, text: "Workers", component: "DisplayAllWorkers"}
+    { icon: HardHat, text: "Workers", component: "DisplayAllWorkers" },
+    { icon: Camera, text: "Camera", component: "Camera" }
   ];
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
@@ -37,8 +39,7 @@ function Sidebar({ setActiveComponent }) {
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 bg-black border-r border-gray-700 shadow-lg p-4 transition-transform duration-300 
-          ${
-            isOpen ? "translate-x-0" : "-translate-x-full"
+          ${isOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0 w-64 md:relative md:block`}
       >
         {/* Close Button */}
@@ -83,7 +84,8 @@ const AdminDashboard = () => {
           {activeComponent === "ApproveReport" && <ApproveReport />}
           {activeComponent === "Marketplace" && <CreateListing />}
           {activeComponent === "History" && <History />}
-          {activeComponent=== "DisplayAllWorkers" && <DisplayAllWorkers />}
+          {activeComponent === "DisplayAllWorkers" && <DisplayAllWorkers />}
+          {activeComponent === "Camera" && <AdminCameraPage />}
         </main>
       </div>
     </div>
