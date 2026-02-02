@@ -10,7 +10,7 @@ function WasteDetectionExactSchema() {
   const [modelInfo, setModelInfo] = useState(null);
   const [detectedSites, setDetectedSites] = useState(new Set());
   const [dbStats, setDbStats] = useState({ total: 0, recent: 0, pending: 0 });
-  const [apiEndpoint] = useState('https://smartwatemobile-1.onrender.com/api/task'); // Change to your API URL
+  const [apiEndpoint] = useState('http://localhost:5000/api/task'); // Change to your API URL
   const [tasks, setTasks] = useState([]);
   const detectionLoopRef = useRef(null);
 

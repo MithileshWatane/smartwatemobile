@@ -494,14 +494,8 @@ export default function CameraDetection({ isOpen, onClose }) {
             // Get GPS coordinates
             const gps = await getGPSCoordinates();
 
-            // Capture screenshot
-            const imageBlob = await new Promise(resolve =>
-                canvas.toBlob(resolve, 'image/jpeg', 0.8)
-            );
-
-            // Generate filename
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '-').substring(0, 19);
-            const filename = `detection_${timestamp}.jpg`;
+            // Capture screenshot as base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
             // Calculate bounding box coordinates for backend
             const x1 = bbox.x * canvas.width;
@@ -521,30 +515,26 @@ export default function CameraDetection({ isOpen, onClose }) {
                 frameWidth: canvas.width.toString(),
                 latitude: gps.latitude?.toString() || '',
                 longitude: gps.longitude?.toString() || '',
-                cameraId: 'CAM1'
+                cameraId: 'CAM1',
+                imageData: imageData // Base64 image for Cloudinary upload
             };
 
-            console.log('Creating task:', taskData);
+            console.log('Creating task with Cloudinary upload...');
 
-            // Prepare FormData
-            const formData = new FormData();
-            formData.append('image', imageBlob, filename);
-            Object.keys(taskData).forEach(key => {
-                if (taskData[key]) {
-                    formData.append(key, taskData[key]);
-                }
-            });
-
-            // Send to backend
+            // Send to backend as JSON
             const response = await fetch('/api/task/detections', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(taskData)
             });
 
             const result = await response.json();
 
             if (result.success || response.ok) {
                 console.log(`✅ Task created successfully`);
+                console.log(`📸 Image uploaded to Cloudinary: ${result.data.imagePath}`);
                 setTaskStats(prev => ({
                     created: prev.created + 1,
                     pending: prev.pending + 1

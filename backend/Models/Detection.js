@@ -96,7 +96,11 @@ const detectionSchema = new mongoose.Schema({
   imagePath: {
     type: String,
     required: true,
-    description: "Path or filename of captured image"
+    description: "Cloudinary URL or path of captured image"
+  },
+  cloudinaryPublicId: {
+    type: String,
+    description: "Cloudinary public ID for image management"
   },
   imageData: {
     type: String,

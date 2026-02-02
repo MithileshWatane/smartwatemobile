@@ -1,40 +1,15 @@
 import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs/promises';
 import Detection from '../Models/Detection.js';
+import cloudinary from '../config/cloudinary.js';
 
 const router = express.Router();
-
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/detections/');
-  },
-  filename: (req, file, cb) => {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    cb(null, `problem_detected_${timestamp}.jpg`);
-  }
-});
-
-const upload = multer({ 
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
-});
 
 // Helper functions
 const calculateSeverity = (width, height, frameHeight, frameWidth) => {
   const detectionArea = width * height;
   const frameArea = frameHeight * frameWidth;
   const coveragePercentage = (detectionArea / frameArea) * 100;
-  
+
   if (coveragePercentage >= 20) return "High";
   if (coveragePercentage >= 10) return "Medium";
   return "Low";
@@ -43,18 +18,18 @@ const calculateSeverity = (width, height, frameHeight, frameWidth) => {
 const calculatePriority = (className, severity) => {
   const classPriority = {
     spills: "High",
-    garbage: "Medium", 
+    garbage: "Medium",
     bin: "Low"
   };
-  
+
   const basePriority = classPriority[className.toLowerCase()] || "Low";
   const priorityLevels = { High: 3, Medium: 2, Low: 1 };
-  
+
   return priorityLevels[severity] > priorityLevels[basePriority] ? severity : basePriority;
 };
 
-// CREATE detection
-router.post('/detections', upload.single('image'), async (req, res) => {
+// CREATE detection with Cloudinary upload
+router.post('/detections', async (req, res) => {
   try {
     const {
       detectedClass,
@@ -64,7 +39,8 @@ router.post('/detections', upload.single('image'), async (req, res) => {
       frameWidth = 640,
       latitude = null,
       longitude = null,
-      cameraId = 'CAM1'
+      cameraId = 'CAM1',
+      imageData // Base64 image data
     } = req.body;
 
     const centerX = (parseFloat(x1) + parseFloat(x2)) / 2;
@@ -73,14 +49,39 @@ router.post('/detections', upload.single('image'), async (req, res) => {
     const height = parseFloat(y2) - parseFloat(y1);
     const detectionSize = width * height;
     const coveragePercentage = (detectionSize / (frameHeight * frameWidth)) * 100;
-    
+
     const severity = calculateSeverity(width, height, frameHeight, frameWidth);
     const priority = calculatePriority(detectedClass, severity);
     const department = detectedClass.toLowerCase() !== "spills" ? "cleaning" : "spill";
     const location = `${cameraId}-${Math.round(centerX)}-${Math.round(centerY)}`;
-    
-    const imagePath = req.file ? req.file.filename : `problem_detected_${Date.now()}.jpg`;
-    
+
+    // Upload image to Cloudinary
+    let imageUrl = null;
+    let cloudinaryPublicId = null;
+    let uploadWarning = null;
+
+    if (imageData) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(imageData, {
+          folder: 'waste-detection',
+          resource_type: 'image',
+          public_id: `detection_${Date.now()}`,
+          transformation: [
+            { width: 1280, height: 720, crop: 'limit' },
+            { quality: 'auto:good' }
+          ]
+        });
+
+        imageUrl = uploadResult.secure_url;
+        cloudinaryPublicId = uploadResult.public_id;
+        console.log(`✅ Image uploaded to Cloudinary: ${imageUrl}`);
+      } catch (uploadError) {
+        console.error('⚠️ Cloudinary upload failed:', uploadError.message);
+        uploadWarning = `Image upload failed: ${uploadError.message}. Detection saved without image.`;
+        // Continue without image - don't fail the entire request
+      }
+    }
+
     const detectionData = {
       size: detectionSize,
       department,
@@ -94,8 +95,8 @@ router.post('/detections', upload.single('image'), async (req, res) => {
       processing: false,
       status: "Incomplete",
       description: `Detected ${detectedClass} with ${parseFloat(confidenceScore).toFixed(2)} confidence.`,
-      imagePath,
-      imageData: req.body.imageData || null,
+      imagePath: imageUrl || `detection_${Date.now()}.jpg`, // Cloudinary URL or fallback
+      cloudinaryPublicId, // Store for potential deletion later
       locationDetails: {
         x: centerX,
         y: centerY,
@@ -109,18 +110,25 @@ router.post('/detections', upload.single('image'), async (req, res) => {
     };
 
     const savedDetection = await new Detection(detectionData).save();
-    
+
     console.log(`✅ Detection stored with ID: ${savedDetection._id}`);
-    
-    res.status(201).json({
+
+    const response = {
       success: true,
       id: savedDetection._id,
       data: savedDetection,
       message: `Detection stored successfully`
-    });
+    };
+
+    // Add warning if image upload failed
+    if (uploadWarning) {
+      response.warning = uploadWarning;
+    }
+
+    res.status(201).json(response);
 
   } catch (error) {
-    console.error('Error storing detection:', error);
+    console.error('❌ Error storing detection:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -208,11 +216,13 @@ router.delete('/detections/:id', async (req, res) => {
     const detection = await Detection.findByIdAndDelete(req.params.id);
     if (!detection) return res.status(404).json({ success: false, message: 'Detection not found' });
 
-    if (detection.imagePath) {
+    // Delete image from Cloudinary if it exists
+    if (detection.cloudinaryPublicId) {
       try {
-        await fs.unlink(path.join('uploads/detections/', detection.imagePath));
-      } catch (fileError) {
-        console.log('Could not delete image file:', fileError.message);
+        await cloudinary.uploader.destroy(detection.cloudinaryPublicId);
+        console.log(`✅ Deleted image from Cloudinary: ${detection.cloudinaryPublicId}`);
+      } catch (cloudinaryError) {
+        console.log('Could not delete image from Cloudinary:', cloudinaryError.message);
       }
     }
 
@@ -248,13 +258,17 @@ router.get('/detections/stats/summary', async (req, res) => {
         $group: {
           _id: '$department',
           count: { $sum: 1 },
-          avgSeverity: { $avg: { $switch: {
-            branches: [
-              { case: { $eq: ['$severity', 'High'] }, then: 3 },
-              { case: { $eq: ['$severity', 'Medium'] }, then: 2 },
-              { case: { $eq: ['$severity', 'Low'] }, then: 1 }
-            ]
-          }}}
+          avgSeverity: {
+            $avg: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ['$severity', 'High'] }, then: 3 },
+                  { case: { $eq: ['$severity', 'Medium'] }, then: 2 },
+                  { case: { $eq: ['$severity', 'Low'] }, then: 1 }
+                ]
+              }
+            }
+          }
         }
       }
     ]);

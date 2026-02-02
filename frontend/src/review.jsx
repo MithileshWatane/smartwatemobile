@@ -20,7 +20,7 @@ const ReviewDashboard = () => {
 
         // Fetch all reviews
         const reviewsResponse = await axios.get(
-          "https://smartwatemobile-1.onrender.com/api/reviews"
+          "http://localhost:5000/api/reviews"
         );
 
         setReviews(reviewsResponse.data);
@@ -57,7 +57,7 @@ const ReviewDashboard = () => {
       setIsSubmitting(true);
 
       const response = await axios.post(
-        "https://smartwatemobile-1.onrender.com/api/reviews/add",
+        "http://localhost:5000/api/reviews/add",
         {
           clerkId: user.id,
           reviewText: review,

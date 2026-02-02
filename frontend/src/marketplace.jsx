@@ -38,7 +38,7 @@ export default function Marketplace() {
 
         // Fetch user data from your backend API using the Clerk ID
         const response = await axios.get(
-          `https://smartwatemobile-1.onrender.com/api/user/profile/${clerkId}`
+          `http://localhost:5000/api/user/profile/${clerkId}`
         );
 
         setUserProfile(response.data);
@@ -64,7 +64,7 @@ export default function Marketplace() {
 
     try {
       const res = await fetch(
-        `https://smartwatemobile-1.onrender.com/api/payment/order`,
+        `http://localhost:5000/api/payment/order`,
         {
           method: "POST",
           headers: {
@@ -95,7 +95,7 @@ export default function Marketplace() {
         // console.log("response", response)
         try {
           const res = await fetch(
-            `https://smartwatemobile-1.onrender.com/api/payment/verify`,
+            `http://localhost:5000/api/payment/verify`,
             {
               method: "POST",
               headers: {
@@ -142,7 +142,7 @@ export default function Marketplace() {
       }
 
       const response = await axios.get(
-        "https://smartwatemobile-1.onrender.com/api/listings",
+        "http://localhost:5000/api/listings",
         { params }
       );
 
@@ -409,7 +409,7 @@ export default function Marketplace() {
       }
 
       const response = await axios.get(
-        "https://smartwatemobile-1.onrender.com/api/listings/purchased",
+        "http://localhost:5000/api/listings/purchased",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -468,7 +468,7 @@ export default function Marketplace() {
 
       // Send request to purchase the item and deduct coins
       const response = await axios.post(
-        "https://smartwatemobile-1.onrender.com/api/listings/purchase",
+        "http://localhost:5000/api/listings/purchase",
         {
           listingId,
           price: coinsUsed,
@@ -483,7 +483,7 @@ export default function Marketplace() {
       try {
         const token = await getToken();
         const response = await axios.patch(
-          `https://smartwatemobile-1.onrender.com/api/listings/${listingId}`,
+          `http://localhost:5000/api/listings/${listingId}`,
           { price: parseInt(coinsUsed) || 0 },
           {
             headers: {
@@ -755,8 +755,8 @@ export default function Marketplace() {
                             {/* Updated purchase button */}
                             <button
                               className={`px-4 py-2 ${purchasedItems.includes(listing._id)
-                                  ? "bg-green-600 hover:bg-green-700"
-                                  : "bg-amber-600 hover:bg-amber-700"
+                                ? "bg-green-600 hover:bg-green-700"
+                                : "bg-amber-600 hover:bg-amber-700"
                                 } text-white rounded-md text-sm font-medium transition duration-300`}
                               onClick={() => {
                                 if (!purchasedItems.includes(listing._id)) {

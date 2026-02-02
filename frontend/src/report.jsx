@@ -190,7 +190,7 @@ export default function Report() {
       setLoading(true);
       console.log("Fetching reports with token:", token.substring(0, 10) + "...");
 
-      const response = await axios.get("https://smartwatemobile-1.onrender.com/api/reports/user", {
+      const response = await axios.get("http://localhost:5000/api/reports/user", {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 10000 // Set a timeout of 10 seconds
       });
@@ -258,7 +258,7 @@ export default function Report() {
       const authToken = await getToken();
 
       const response = await axios.post(
-        'https://smartwatemobile-1.onrender.com/api/reports',
+        'http://localhost:5000/api/reports',
         formData,
         {
           headers: {
@@ -492,7 +492,7 @@ export default function Report() {
     const fetchReports = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("https://smartwatemobile-1.onrender.com/api/reports/user", {
+        const response = await axios.get("http://localhost:5000/api/reports/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -1120,8 +1120,8 @@ export default function Report() {
                 <button
                   onClick={() => handleFilterChange('all')}
                   className={`px-4 py-2 text-sm font-medium rounded-md ${filter === 'all'
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-700'
+                    ? 'bg-teal-600 text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-700'
                     }`}
                 >
                   All Reports
@@ -1129,8 +1129,8 @@ export default function Report() {
                 <button
                   onClick={() => handleFilterChange('pending')}
                   className={`px-4 py-2 text-sm font-medium rounded-md ${filter === 'pending'
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-700'
+                    ? 'bg-teal-600 text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-700'
                     }`}
                 >
                   Pending ({pendingReports})
@@ -1138,8 +1138,8 @@ export default function Report() {
                 <button
                   onClick={() => handleFilterChange('accepted')}
                   className={`px-4 py-2 text-sm font-medium rounded-md ${filter === 'accepted'
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-700'
+                    ? 'bg-teal-600 text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-700'
                     }`}
                 >
                   Accepted ({acceptedReports})
@@ -1236,8 +1236,8 @@ export default function Report() {
                     onClick={() => handlePageChange(page - 1)}
                     disabled={page === 1}
                     className={`p-2 rounded-md ${page === 1
-                        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1250,8 +1250,8 @@ export default function Report() {
                       key={pageNum}
                       onClick={() => handlePageChange(pageNum)}
                       className={`px-4 py-2 rounded-md ${page === pageNum
-                          ? 'bg-teal-600 text-white'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
+                        ? 'bg-teal-600 text-white'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
                         }`}
                     >
                       {pageNum}
@@ -1262,8 +1262,8 @@ export default function Report() {
                     onClick={() => handlePageChange(page + 1)}
                     disabled={page === totalPages}
                     className={`p-2 rounded-md ${page === totalPages
-                        ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
