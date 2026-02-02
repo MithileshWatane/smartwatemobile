@@ -122,75 +122,126 @@ const DisplayAllWorkers = () => {
   }
 
   return (
-    <div className="bg-gray-900 rounded-lg p-6 border border-red-500/50">
-      <h1 className="text-2xl font-bold mb-6 text-white">All Workers</h1>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-800">
-            <th className="p-3 border border-gray-700 text-white">ID</th>
-            <th className="p-3 border border-gray-700 text-white">First Name</th>
-            <th className="p-3 border border-gray-700 text-white">Last Name</th>
-            <th className="p-3 border border-gray-700 text-white">Email</th>
-            <th className="p-3 border border-gray-700 text-white">Phone</th>
-            <th className="p-3 border border-gray-700 text-white">Department</th>
-            <th className="p-3 border border-gray-700 text-white">Location</th>
-            <th className="p-3 border border-gray-700 text-white">Start Date</th>
-            <th className="p-3 border border-gray-700 text-white">Shift</th>
-            <th className="p-3 border border-gray-700 text-white">Gender</th>
-            <th className="p-3 border border-gray-700 text-white">Age</th>
-            <th className="p-3 border border-gray-700 text-white">Emergency Responder</th>
-            <th className="p-3 border border-gray-700 text-white">Available</th>
-            <th className="p-3 border border-gray-700 text-white">Additional Details</th>
-            <th className="p-3 border border-gray-700 text-white">Edit</th>
-            <th className="p-3 border border-gray-700 text-white">Remove</th>
-          </tr>
-        </thead>
-        <tbody>
-          {workers.map((worker) => (
-            <tr key={worker._id} className="bg-gray-700 hover:bg-gray-600">
-              <td className="p-3 border border-gray-600 text-white">{worker._id}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.firstName}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.lastName}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.email}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.phone}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.department}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.location || "Not specified"}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.startDate}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.shift}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.gender}</td>
-              <td className="p-3 border border-gray-600 text-white">{worker.age}</td>
-              <td className="p-3 border border-gray-600 text-white">
-                {worker.emergencyResponder ? "Yes" : "No"}
-              </td>
-              <td className="p-3 border border-gray-600 text-center">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${worker.available
+    <div className="bg-gray-900 rounded-lg p-4 md:p-6 border border-red-500/50">
+      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-white">All Workers</h1>
+
+      {/* Desktop Table View - Hidden on mobile/tablet */}
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-800">
+              <th className="p-3 border border-gray-700 text-white">Name</th>
+              <th className="p-3 border border-gray-700 text-white">Phone</th>
+              <th className="p-3 border border-gray-700 text-white">Department</th>
+              <th className="p-3 border border-gray-700 text-white">Location</th>
+              <th className="p-3 border border-gray-700 text-white">Shift</th>
+              <th className="p-3 border border-gray-700 text-white">Emergency Responder</th>
+              <th className="p-3 border border-gray-700 text-white">Available</th>
+              <th className="p-3 border border-gray-700 text-white">Edit</th>
+              <th className="p-3 border border-gray-700 text-white">Remove</th>
+            </tr>
+          </thead>
+          <tbody>
+            {workers.map((worker) => (
+              <tr key={worker._id} className="bg-gray-700 hover:bg-gray-600">
+                <td className="p-3 border border-gray-600 text-white">{worker.firstName} {worker.lastName}</td>
+                <td className="p-3 border border-gray-600 text-white">{worker.phone}</td>
+                <td className="p-3 border border-gray-600 text-white">{worker.department}</td>
+                <td className="p-3 border border-gray-600 text-white">{worker.location || "Not specified"}</td>
+                <td className="p-3 border border-gray-600 text-white">{worker.shift}</td>
+                <td className="p-3 border border-gray-600 text-white">
+                  {worker.emergencyResponder ? "Yes" : "No"}
+                </td>
+                <td className="p-3 border border-gray-600 text-center">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${worker.available
                     ? "bg-green-900 text-green-300"
                     : "bg-red-900 text-red-300"
+                    }`}>
+                    {worker.available ? "Available" : "Unavailable"}
+                  </span>
+                </td>
+                <td className="p-3 border border-gray-600 text-center">
+                  <button
+                    onClick={() => handleEdit(worker._id)}
+                    className="text-teal-400 hover:text-teal-300 cursor-pointer"
+                  >
+                    <Edit size={18} />
+                  </button>
+                </td>
+                <td className="p-3 border border-gray-600 text-center">
+                  <button
+                    onClick={() => handleRemove(worker._id)}
+                    className="text-red-400 hover:text-red-300 cursor-pointer"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile/Tablet Card View - Hidden on desktop */}
+      <div className="lg:hidden space-y-4">
+        {workers.map((worker) => (
+          <div key={worker._id} className="bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-lg">
+            {/* Header with name and actions */}
+            <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-700">
+              <div>
+                <h3 className="text-lg font-semibold text-white">
+                  {worker.firstName} {worker.lastName}
+                </h3>
+                <span className={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-semibold ${worker.available
+                  ? "bg-green-900 text-green-300"
+                  : "bg-red-900 text-red-300"
                   }`}>
                   {worker.available ? "Available" : "Unavailable"}
                 </span>
-              </td>
-              <td className="p-3 border border-gray-600 text-white">{worker.additionalDetails}</td>
-              <td className="p-3 border border-gray-600 text-center">
+              </div>
+              <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(worker._id)}
-                  className="text-teal-400 hover:text-teal-300 cursor-pointer"
+                  className="p-2 bg-teal-900/50 text-teal-400 hover:bg-teal-900 rounded-md transition-colors"
                 >
                   <Edit size={18} />
                 </button>
-              </td>
-              <td className="p-3 border border-gray-600 text-center">
                 <button
                   onClick={() => handleRemove(worker._id)}
-                  className="text-red-400 hover:text-red-300 cursor-pointer"
+                  className="p-2 bg-red-900/50 text-red-400 hover:bg-red-900 rounded-md transition-colors"
                 >
                   <Trash2 size={18} />
                 </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </div>
+
+            {/* Worker Details Grid */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-gray-400 text-xs">Phone</p>
+                <p className="text-white">{worker.phone}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs">Department</p>
+                <p className="text-white capitalize">{worker.department}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs">Location</p>
+                <p className="text-white">{worker.location || "Not specified"}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs">Shift</p>
+                <p className="text-white capitalize">{worker.shift}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-gray-400 text-xs">Emergency Responder</p>
+                <p className="text-white">{worker.emergencyResponder ? "Yes" : "No"}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
 
       {/* Edit Modal */}
       {isEditModalOpen && selectedWorker && (
