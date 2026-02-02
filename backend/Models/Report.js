@@ -37,7 +37,7 @@ const ReportSchema = new mongoose.Schema({
       "forest", // Forest/Natural Area
       "residential", // Residential Area
       "commercial", // Commercial Area
-      "Public Place", 
+      "Public Place",
       "other", // Other
     ],
     required: true,
@@ -46,6 +46,8 @@ const ReportSchema = new mongoose.Schema({
   location: { type: String, required: true }, // Simple string for location
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
+  imageUrl: { type: String }, // Cloudinary URL
+  cloudinaryPublicId: { type: String }, // Store for deletion
   coinsEarned: { type: Number, default: 0 }, // Coins awarded for the report
   status: { type: String, enum: ["pending", "accepted"], default: "pending" }, // Report status
   reportedAt: { type: Date, default: Date.now }, // Date of reporting

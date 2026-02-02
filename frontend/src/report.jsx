@@ -30,9 +30,28 @@ export default function Report() {
     description: '',
     latitude: null,
     longitude: null,
-    coinsEarned: 0 // Add this field to track the coins in the form data
-
+    coinsEarned: 0, // Add this field to track the coins in the form data
+    imageData: null // Add this field for the image
   });
+
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setFormData(prev => ({ ...prev, imageData: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
 
   // Custom icon to fix missing marker issue
@@ -283,9 +302,10 @@ export default function Report() {
           description: '',
           latitude: null,
           longitude: null,
-          coinsEarned: 10 // Default to small quantity coins
-
+          coinsEarned: 10, // Default to small quantity coins
+          imageData: null
         });
+        setImagePreview(null);
         setSubmitSuccess(false);
       }, 3000);
 
@@ -761,6 +781,49 @@ export default function Report() {
                     />
                   </div>
 
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    >
+                      Upload Waste Image
+                    </label>
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-neutral-600 border-dashed rounded-md hover:border-teal-500 dark:hover:border-teal-400 transition-colors">
+                      <div className="space-y-1 text-center">
+                        {imagePreview ? (
+                          <div className="relative inline-block">
+                            <img src={imagePreview} alt="Preview" className="mx-auto h-32 w-auto rounded-md" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setImagePreview(null);
+                                setFormData(prev => ({ ...prev, imageData: null }));
+                              }}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                        <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                          <label htmlFor="file-upload" className="relative cursor-pointer bg-white dark:bg-neutral-800 rounded-md font-medium text-teal-600 dark:text-teal-400 hover:text-teal-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-teal-500">
+                            <span>Upload a file</span>
+                            <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          PNG, JPG, GIF up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="pt-4">
                     <button
                       type="submit"
@@ -1151,15 +1214,25 @@ export default function Report() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getPaginatedReports().map((report) => (
                 <div key={report._id} className="bg-white dark:bg-neutral-800 rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
-                  <div className="h-48 bg-gray-200 dark:bg-neutral-700 flex items-center justify-center">
-                    <div className="text-center p-6">
-                      <div className="w-16 h-16 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                        {wasteTypeIcons[report.waste_type] || wasteTypeIcons.default}
+                  <div className="h-48 bg-gray-200 dark:bg-neutral-700">
+                    {report.imageUrl ? (
+                      <img
+                        src={report.imageUrl}
+                        alt={report.waste_type}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="text-center p-6">
+                          <div className="w-16 h-16 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center mx-auto mb-3">
+                            {wasteTypeIcons[report.waste_type] || wasteTypeIcons.default}
+                          </div>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            {report.waste_type.charAt(0).toUpperCase() + report.waste_type.slice(1)} Waste
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        {report.waste_type.charAt(0).toUpperCase() + report.waste_type.slice(1)} Waste
-                      </p>
-                    </div>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-2">

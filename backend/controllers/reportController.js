@@ -1,23 +1,54 @@
 import Report from '../Models/Report.js';
+import cloudinary from '../config/cloudinary.js';
 
 // Create a new report
 export const createReport = async (req, res) => {
   try {
     // Get the authenticated user's Clerk ID from the request
     const userId = req.auth.userId;
-    
+
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    
+
+    const { imageData, ...otherData } = req.body;
+
+    // Upload image to Cloudinary if provided
+    let imageUrl = null;
+    let cloudinaryPublicId = null;
+
+    if (imageData) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(imageData, {
+          folder: 'waste-reports',
+          resource_type: 'image',
+          public_id: `report_${Date.now()}`,
+          transformation: [
+            { width: 1280, height: 720, crop: 'limit' },
+            { quality: 'auto:good' }
+          ]
+        });
+
+        imageUrl = uploadResult.secure_url;
+        cloudinaryPublicId = uploadResult.public_id;
+        console.log(`✅ Report image uploaded to Cloudinary: ${imageUrl}`);
+      } catch (uploadError) {
+        console.error('⚠️ Cloudinary upload failed for report:', uploadError.message);
+        // We might want to fail or continue without image.
+        // Let's continue for now but log it.
+      }
+    }
+
     const reportData = {
-      ...req.body,
-      user: userId
+      ...otherData,
+      user: userId,
+      imageUrl,
+      cloudinaryPublicId
     };
-    
+
     const report = new Report(reportData);
     await report.save();
-    
+
     res.status(201).json(report);
   } catch (error) {
     console.error('Error creating report:', error);
@@ -40,11 +71,11 @@ export const getAllReports = async (req, res) => {
 export const getUserReports = async (req, res) => {
   try {
     const userId = req.auth.userId;
-    
+
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    
+
     const reports = await Report.find({ user: userId });
     res.status(200).json(reports);
   } catch (error) {
@@ -58,11 +89,11 @@ export const getReportById = async (req, res) => {
   try {
     const { id } = req.params;
     const report = await Report.findById(id);
-    
+
     if (!report) {
       return res.status(404).json({ message: 'Report not found' });
     }
-    
+
     res.status(200).json(report);
   } catch (error) {
     console.error('Error fetching report:', error);
@@ -75,28 +106,28 @@ export const updateReport = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.auth.userId;
-    
+
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    
+
     const report = await Report.findById(id);
-    
+
     if (!report) {
       return res.status(404).json({ message: 'Report not found' });
     }
-    
+
     // Check if the user owns this report
     if (report.user.toString() !== userId) {
       return res.status(403).json({ message: 'Forbidden: You can only update your own reports' });
     }
-    
+
     const updatedReport = await Report.findByIdAndUpdate(
       id,
       req.body,
       { new: true, runValidators: true }
     );
-    
+
     res.status(200).json(updatedReport);
   } catch (error) {
     console.error('Error updating report:', error);
@@ -109,22 +140,22 @@ export const deleteReport = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.auth.userId;
-    
+
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    
+
     const report = await Report.findById(id);
-    
+
     if (!report) {
       return res.status(404).json({ message: 'Report not found' });
     }
-    
+
     // Check if the user owns this report
     if (report.user.toString() !== userId) {
       return res.status(403).json({ message: 'Forbidden: You can only delete your own reports' });
     }
-    
+
     await Report.findByIdAndDelete(id);
     res.status(200).json({ message: 'Report deleted successfully' });
   } catch (error) {
@@ -138,21 +169,21 @@ export const updateReportStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
+
     if (!['pending', 'accepted'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
-    
+
     const report = await Report.findById(id);
-    
+
     if (!report) {
       return res.status(404).json({ message: 'Report not found' });
     }
-    
+
     // You might want to add additional admin check here
-    
+
     report.status = status;
-    
+
     // If status is changing to accepted and coins haven't been awarded yet
     if (status === 'accepted' && report.coinsEarned === 0) {
       // Simple algorithm for coins: small=10, medium=20, large=30, very-large=50
@@ -162,10 +193,10 @@ export const updateReportStatus = async (req, res) => {
         'large': 30,
         'very-large': 50
       };
-      
+
       report.coinsEarned = coinMapping[report.estimated_quantity] || 10;
     }
-    
+
     await report.save();
     res.status(200).json(report);
   } catch (error) {

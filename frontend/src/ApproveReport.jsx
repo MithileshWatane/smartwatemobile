@@ -80,8 +80,8 @@ const ApproveReport = () => {
     return (
       <div className="bg-gray-900 rounded-lg p-6 border border-red-500/50">
         <p className="text-center text-red-400 text-lg">{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="mt-4 mx-auto block bg-purple-700 hover:bg-purple-600 text-white py-2 px-4 rounded-md transition-all"
         >
           Try Again
@@ -111,6 +111,7 @@ const ApproveReport = () => {
                 <th className="py-4 px-3 text-left text-sm font-semibold text-gray-300">User</th>
                 {/* <th className="py-4 px-3 text-left text-sm font-semibold text-gray-300">Location</th> */}
                 <th className="py-4 px-3 text-left text-sm font-semibold text-gray-300">Current GC</th>
+                <th className="py-4 px-3 text-left text-sm font-semibold text-gray-300">Waste Image</th>
                 <th className="py-4 px-3 text-left text-sm font-semibold text-gray-300">Waste Type</th>
                 <th className="py-4 px-3 text-left text-sm font-semibold text-gray-300">Quantity</th>
                 <th className="py-4 px-3 text-left text-sm font-semibold text-gray-300">Location Type</th>
@@ -137,6 +138,20 @@ const ApproveReport = () => {
                           <span>{user.greenCoins || "0"}</span>
                         </div>
                       </td>
+                      <td className="py-4 px-3">
+                        {report.imageUrl ? (
+                          <div className="relative group">
+                            <img
+                              src={report.imageUrl}
+                              alt="Waste"
+                              className="h-12 w-12 object-cover rounded-md border border-gray-700 cursor-pointer hover:scale-150 transition-transform z-10"
+                              onClick={() => window.open(report.imageUrl, '_blank')}
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-gray-500 text-xs italic">No image</span>
+                        )}
+                      </td>
                       <td className="py-4 px-3 text-gray-300">{report.waste_type}</td>
                       <td className="py-4 px-3 text-gray-300">{report.estimated_quantity}</td>
                       <td className="py-4 px-3 text-gray-300">{report.location_type}</td>
@@ -148,11 +163,10 @@ const ApproveReport = () => {
                         </div>
                       </td>
                       <td className="py-4 px-3">
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                          report.status === "accepted" 
-                            ? "bg-green-900/40 text-green-400" 
-                            : "bg-yellow-900/40 text-yellow-400"
-                        }`}>
+                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${report.status === "accepted"
+                          ? "bg-green-900/40 text-green-400"
+                          : "bg-yellow-900/40 text-yellow-400"
+                          }`}>
                           {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                         </span>
                       </td>
@@ -185,12 +199,12 @@ const ApproveReport = () => {
             </tbody>
           </table>
         </div>
-        
+
         <div className="px-6 py-4 bg-gray-800/50 border-t border-gray-800 flex justify-between items-center">
           <span className="text-sm text-gray-400">
             Showing {reports.length} report{reports.length !== 1 ? 's' : ''}
           </span>
-  
+
         </div>
       </div>
     </div>
