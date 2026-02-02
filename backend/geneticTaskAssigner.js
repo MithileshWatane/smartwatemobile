@@ -13,7 +13,7 @@ async function ensureConnection() {
     console.log('✅ MongoDB already connected');
     return;
   }
-  
+
   // If not connected, use the shared connection method
   await connectDB();
 }
@@ -34,10 +34,19 @@ const priority_score = {
   5: 5    // Critical priority
 };
 
-// Function to determine current shift based on time
+// Function to determine current shift based on IST time (India Standard Time)
 function getCurrentShift() {
-  const currentHour = new Date().getHours();
-  
+  // Get current UTC time
+  const now = new Date();
+
+  // Convert to IST (UTC+5:30)
+  const istOffset = 5.5 * 60; // IST is UTC+5:30 in minutes
+  const istTime = new Date(now.getTime() + istOffset * 60 * 1000);
+  const currentHour = istTime.getUTCHours(); // Use getUTCHours since we've already adjusted to IST
+
+  console.log(`🕐 Server UTC time: ${now.toISOString()}`);
+  console.log(`🕐 IST time: ${istTime.toISOString()} (Hour: ${currentHour})`);
+
   if (currentHour >= 6 && currentHour < 14) {
     return 'morning';
   } else if (currentHour >= 14 && currentHour < 22) {
@@ -61,7 +70,7 @@ function generateInitialPopulation(workers, tasks, populationSize = 10) {
 // Function to calculate the fitness score for a given task-worker assignment
 function calculateFitness(individual, workers, tasks) {
   let score = 0;
-  
+
   for (let i = 0; i < tasks.length; i++) {
     const worker = workers[individual[i]];
     const task = tasks[i];
@@ -131,7 +140,7 @@ function calculateRequiredWorkers(task) {
   const s = severity_score[task.severity];
   const p = priority_score[task.priority];
   const z = task.size;
-  
+
   // Formula to calculate how many workers are needed based on task attributes
   const score = s + p + z;
 
@@ -182,10 +191,10 @@ async function assignTasks() {
 
   // Start a session for transaction support
   const session = await mongoose.startSession();
-  
+
   // Store notification tasks to be executed after transaction completion
   const notificationQueue = [];
-  
+
   try {
     // Start a transaction
     session.startTransaction();
@@ -195,24 +204,24 @@ async function assignTasks() {
     console.log(`🕒 Current shift is: ${currentShift}`);
 
     // Only get tasks that are definitely not assigned yet
-    const tasks = await Task.find({ 
+    const tasks = await Task.find({
       assigned: false,
       processing: { $ne: true } // Ensure no other instance is processing these
     }).session(session);
-    
+
     if (!tasks.length) {
       console.log('⚠ No unassigned tasks available');
       await session.abortTransaction();
       session.endSession();
       return;
     }
-    
+
     // Pre-filter workers based on availability and current shift
     const allWorkers = await Worker.find({
       available: true,
       shift: currentShift
     }).session(session);
-    
+
     if (!allWorkers.length) {
       console.log(`⚠ No available workers for ${currentShift} shift`);
       await session.abortTransaction();
@@ -240,10 +249,10 @@ async function assignTasks() {
     // Process each department's tasks separately
     for (const [department, departmentTasks] of Object.entries(tasksByDepartment)) {
       console.log(`🧹 Processing ${departmentTasks.length} tasks for ${department} department`);
-      
+
       // Get workers for this department
       const departmentWorkers = allWorkers.filter(worker => worker.department === department);
-      
+
       if (!departmentWorkers.length) {
         console.log(`⚠ No available workers for ${department} department in ${currentShift} shift`);
         continue; // Skip to next department
@@ -305,7 +314,7 @@ async function assignTasks() {
         await worker.save({ session });
 
         console.log(`🧹 Assigned Task ${task._id} (${task.department} - ${task.severity}) to ${worker.firstName} (${worker.email}) (${worker.phone}) (${worker._id})`);
-        
+
         notificationQueue.push({
           workerPhone: worker.phone,
           worker: {
@@ -326,7 +335,7 @@ async function assignTasks() {
     // Commit the transaction
     await session.commitTransaction();
     console.log('✅ Task assignment completed successfully');
-    
+
     // Now that the transaction is committed, process the notification queue
     for (const notification of notificationQueue) {
       try {
@@ -336,7 +345,7 @@ async function assignTasks() {
           notification.task,
           notification.worker
         );
-        
+
         // Log notification results
         if (notificationResults.sms) {
           console.log(`📱 SMS notification sent successfully (SID: ${notificationResults.sms.sid})`);
@@ -345,7 +354,7 @@ async function assignTasks() {
           console.log(`📞 Call notification sent successfully (SID: ${notificationResults.call.sid})`);
         }
         if (notificationResults.errors.length > 0) {
-          console.warn(`⚠️ Some notifications failed for ${notification.worker.firstName}:`, 
+          console.warn(`⚠️ Some notifications failed for ${notification.worker.firstName}:`,
             notificationResults.errors.map(e => e.type).join(', '));
         }
       } catch (error) {
@@ -353,7 +362,7 @@ async function assignTasks() {
         // Continue with other notifications
       }
     }
-    
+
   } catch (error) {
     // If an error occurs, abort the transaction
     await session.abortTransaction();
