@@ -63,7 +63,8 @@ const DisplayAllWorkers = () => {
           body: JSON.stringify({
             department: selectedWorker.department,
             shift: selectedWorker.shift,
-            location: selectedWorker.location // Add location to the update payload
+            location: selectedWorker.location,
+            available: selectedWorker.available // Add availability to the update payload
           }),
         }
       );
@@ -86,14 +87,14 @@ const DisplayAllWorkers = () => {
       const response = await fetch(`${url}worker/${workerId}`, {
         method: "DELETE",
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to delete worker");
       }
-  
+
       // Display success alert
       alert("Worker deleted successfully!");
-  
+
       // Refresh the worker data
       await fetchWorkers();
     } catch (err) {
@@ -138,6 +139,7 @@ const DisplayAllWorkers = () => {
             <th className="p-3 border border-gray-700 text-white">Gender</th>
             <th className="p-3 border border-gray-700 text-white">Age</th>
             <th className="p-3 border border-gray-700 text-white">Emergency Responder</th>
+            <th className="p-3 border border-gray-700 text-white">Available</th>
             <th className="p-3 border border-gray-700 text-white">Additional Details</th>
             <th className="p-3 border border-gray-700 text-white">Edit</th>
             <th className="p-3 border border-gray-700 text-white">Remove</th>
@@ -160,10 +162,18 @@ const DisplayAllWorkers = () => {
               <td className="p-3 border border-gray-600 text-white">
                 {worker.emergencyResponder ? "Yes" : "No"}
               </td>
+              <td className="p-3 border border-gray-600 text-center">
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${worker.available
+                    ? "bg-green-900 text-green-300"
+                    : "bg-red-900 text-red-300"
+                  }`}>
+                  {worker.available ? "Available" : "Unavailable"}
+                </span>
+              </td>
               <td className="p-3 border border-gray-600 text-white">{worker.additionalDetails}</td>
               <td className="p-3 border border-gray-600 text-center">
                 <button
-                  onClick={() => handleEdit(worker._id)} 
+                  onClick={() => handleEdit(worker._id)}
                   className="text-teal-400 hover:text-teal-300 cursor-pointer"
                 >
                   <Edit size={18} />
@@ -171,7 +181,7 @@ const DisplayAllWorkers = () => {
               </td>
               <td className="p-3 border border-gray-600 text-center">
                 <button
-                  onClick={() => handleRemove(worker._id)} 
+                  onClick={() => handleRemove(worker._id)}
                   className="text-red-400 hover:text-red-300 cursor-pointer"
                 >
                   <Trash2 size={18} />
@@ -290,17 +300,17 @@ const DisplayAllWorkers = () => {
                   </select>
                 </div>
                 <div>
-  <label className="block text-sm font-medium text-gray-300">Location</label>
-  <input
-    type="text"
-    value={selectedWorker.location || ""}
-    onChange={(e) =>
-      setSelectedWorker({ ...selectedWorker, location: e.target.value })
-    }
-    placeholder="Enter location"
-    className="w-full bg-gray-700 text-gray-300 rounded-md p-2 mt-1"
-  />
-</div>
+                  <label className="block text-sm font-medium text-gray-300">Location</label>
+                  <input
+                    type="text"
+                    value={selectedWorker.location || ""}
+                    onChange={(e) =>
+                      setSelectedWorker({ ...selectedWorker, location: e.target.value })
+                    }
+                    placeholder="Enter location"
+                    className="w-full bg-gray-700 text-gray-300 rounded-md p-2 mt-1"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300">Shift</label>
                   <select
@@ -315,6 +325,28 @@ const DisplayAllWorkers = () => {
                     <option value="evening">Evening</option>
                     <option value="night">Night</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300">Availability</label>
+                  <div className="flex items-center mt-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedWorker({ ...selectedWorker, available: !selectedWorker.available })
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${selectedWorker.available ? "bg-green-600" : "bg-gray-600"
+                        }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${selectedWorker.available ? "translate-x-6" : "translate-x-1"
+                          }`}
+                      />
+                    </button>
+                    <span className={`ml-3 text-sm font-medium ${selectedWorker.available ? "text-green-400" : "text-red-400"
+                      }`}>
+                      {selectedWorker.available ? "Available" : "Unavailable"}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="mt-6 flex justify-end space-x-4">
