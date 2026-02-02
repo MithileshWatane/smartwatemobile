@@ -522,7 +522,8 @@ export default function CameraDetection({ isOpen, onClose }) {
             console.log('Creating task with Cloudinary upload...');
 
             // Send to backend as JSON
-            const response = await fetch('/api/task/detections', {
+            const apiUrl = import.meta.env.VITE_API_URL || '/api/';
+            const response = await fetch(`${apiUrl}task/detections`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
